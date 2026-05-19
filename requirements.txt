@@ -1,0 +1,4 @@
+Streamlit
+Pandas
+gspread
+google-auth

@@ -35,7 +35,7 @@ def connect_sheet():
     sheet = client.open(SHEET_NAME).sheet1
     return sheet
 
-def add_record(location, record_type):
+def add_record(location, record_type, boxes):
     sheet = connect_sheet()
     now = datetime.now()
 
@@ -43,7 +43,8 @@ def add_record(location, record_type):
         now.strftime("%d/%m/%Y"),
         now.strftime("%H:%M:%S"),
         location,
-        record_type
+        record_type,
+        boxes
     ]
 
     sheet.append_row(row)
@@ -61,11 +62,62 @@ st.title("🚚 NP Delivery Tracker")
 
 record_type = st.selectbox("Record Type", ["Pick up", "Drop off"])
 
+st.subheader("Number of Boxes")
+
+boxes = st.number_input(
+    "Boxes",
+    main_value = 0,
+    step = 1,
+    value =st.session_state.boxes,
+    key="boxes_input"
+)
+
+st.session_state.boxes = boxes,
+
+col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+
+with col1:
+    if st.button("-10"):
+        st.session_state.boxes = max(0, st.session_state.boxes - 10)
+        set.rerun()
+
+with col2:
+    if st.button("-5"):
+        st.session_state.boxes = max(0, st.session_state.boxes - 5)
+        set.rerun()
+
+with col3:
+    if st.button("-1"):
+        st.session_state.boxes = max(0, st.session_state.boxes - 1)
+        set.rerun()
+
+with col4:
+    if st.button("Reset"):
+        st.session_state.boxes = 0
+        set.rerun()
+
+with col5:
+    if st.button("+1"):
+        st.session_state.boxes += 1
+        set.rerun()
+
+with col6:
+    if st.button("+5"):
+        st.session_state.boxes += 2
+        set.rerun()
+
+with col7:
+    if st.button("+10"):
+        st.session_state.boxes += 10
+        set.rerun()
+
+boxes = st.ssession_state.boxes
+
 st.write("Tap a location to record current time:")
 
 for location in LOCATIONS:
     if st.button(location, use_container_width=True):
-        add_record(location, record_type)
+        add_record(location, record_type, boxes)
         st.success(f"Recorded: {location}")
 
 st.divider()

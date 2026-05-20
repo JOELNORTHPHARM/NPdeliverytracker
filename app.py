@@ -36,15 +36,13 @@ def login():
             st.error("Incorrect username or password.")
 
     return False
-if login():
-    if "username" in st.session_state:
-        st.caption(f"Logged in as: {st.session_state.username}")
-
-    st.title("NP Delivery Tracker")
 
 if not login():
     st.stop()
 
+st.caption(f"Logged in as: {st.session_state.username}")
+
+st.title("🚚NP Delivery Tracker")
 
 LOCATIONS = [
     "Stuart Park Pharmacy",

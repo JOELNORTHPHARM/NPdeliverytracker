@@ -74,86 +74,28 @@ def reset_boxes():
 if "boxes" not in st.session_state:
     st.session_state.boxes = 0
 
+st.write("Select location:")
 
-st.subheader("Number of Boxes")
-
-st.markdown(
-    f"""
-    <h2 style='text-align: center; margin-bottom: 10px;'>
-        📦 {st.session_state.boxes}
-    </h2>
-    """,
-    unsafe_allow_html=True
+selected_location = st.selectbox(
+    "Location",
+    LOCATIONS
 )
 
-row1_col1, row1_col2, row1_col3 = st.columns(3)
+current_boxes = st.number_input(
+    "Number of Boxes",
+    min_value=0,
+    step=1,
+    value=0
+)
 
-with row1_col1:
-    st.button(
-        "-10",
-        use_container_width=True,
-        on_click=change_boxes,
-        args=(-10,)
+if st.button("Record", use_container_width=True, type="primary"):
+    add_record(selected_location, record_type, current_boxes)
+    st.success(
+        f"{record_type} recorded at {selected_location} ({current_boxes} boxes)"
     )
-
-with row1_col2:
-    st.button(
-        "-5",
-        use_container_width=True,
-        on_click=change_boxes,
-        args=(-5,)
-    )
-
-with row1_col3:
-    st.button(
-        "-1",
-        use_container_width=True,
-        on_click=change_boxes,
-        args=(-1,)
-    )
+    st.rerun()
 
 
-row2_col1, row2_col2, row2_col3, row2_col4 = st.columns(4)
-
-with row2_col1:
-    st.button(
-        "Reset",
-        use_container_width=True,
-        on_click=reset_boxes
-    )
-
-with row2_col2:
-    st.button(
-        "+1",
-        use_container_width=True,
-        on_click=change_boxes,
-        args=(1,)
-    )
-
-with row2_col3:
-    st.button(
-        "+5",
-        use_container_width=True,
-        on_click=change_boxes,
-        args=(5,)
-    )
-
-with row2_col4:
-    st.button(
-        "+10",
-        use_container_width=True,
-        on_click=change_boxes,
-        args=(10,)
-    )
-
-current_boxes = int(st.session_state.boxes)
-
-st.write("Tap a location to record current time:")
-
-for location in LOCATIONS:
-    if st.button(location, use_container_width=True):
-        add_record(location, record_type, current_boxes)
-        st.success(f"Recorded: {location}")
 
 st.divider()
 

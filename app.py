@@ -44,7 +44,7 @@ def add_record(location, record_type, current_boxes):
         now.strftime("%H:%M:%S"),
         location,
         record_type,
-        boxes
+        current_boxes
     ]
 
     sheet.append_row(row)
@@ -74,43 +74,77 @@ def reset_boxes():
 if "boxes" not in st.session_state:
     st.session_state.boxes = 0
 
-try:
-    st.session_state.boxes = int(st.session_state.boxes)
-except:
-    st.session_state.boxes = 0
-
 
 st.subheader("Number of Boxes")
 
-boxes = st.number_input(
-    "Boxes",
-    min_value=0,
-    step=1,
-    key="boxes"
+st.markdown(
+    f"""
+    <h2 style='text-align: center; margin-bottom: 10px;'>
+        📦 {st.session_state.boxes}
+    </h2>
+    """,
+    unsafe_allow_html=True
 )
 
-col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+row1_col1, row1_col2, row1_col3 = st.columns(3)
 
-with col1:
-    st.button("-10", on_click=change_boxes, args=(-10,))
+with row1_col1:
+    st.button(
+        "-10",
+        use_container_width=True,
+        on_click=change_boxes,
+        args=(-10,)
+    )
 
-with col2:
-    st.button("-5", on_click=change_boxes, args=(-5,))
+with row1_col2:
+    st.button(
+        "-5",
+        use_container_width=True,
+        on_click=change_boxes,
+        args=(-5,)
+    )
 
-with col3:
-    st.button("-1", on_click=change_boxes, args=(-1,))
+with row1_col3:
+    st.button(
+        "-1",
+        use_container_width=True,
+        on_click=change_boxes,
+        args=(-1,)
+    )
 
-with col4:
-    st.button("Reset", on_click=reset_boxes)
 
-with col5:
-    st.button("+1", on_click=change_boxes, args=(1,))
+row2_col1, row2_col2, row2_col3, row2_col4 = st.columns(4)
 
-with col6:
-    st.button("+5", on_click=change_boxes, args=(5,))
+with row2_col1:
+    st.button(
+        "Reset",
+        use_container_width=True,
+        on_click=reset_boxes
+    )
 
-with col7:
-    st.button("+10", on_click=change_boxes, args=(10,))
+with row2_col2:
+    st.button(
+        "+1",
+        use_container_width=True,
+        on_click=change_boxes,
+        args=(1,)
+    )
+
+with row2_col3:
+    st.button(
+        "+5",
+        use_container_width=True,
+        on_click=change_boxes,
+        args=(5,)
+    )
+
+with row2_col4:
+    st.button(
+        "+10",
+        use_container_width=True,
+        on_click=change_boxes,
+        args=(10,)
+    )
 
 current_boxes = int(st.session_state.boxes)
 
@@ -118,7 +152,7 @@ st.write("Tap a location to record current time:")
 
 for location in LOCATIONS:
     if st.button(location, use_container_width=True):
-        add_record(location, record_type, boxes)
+        add_record(location, record_type, current_boxes)
         st.success(f"Recorded: {location}")
 
 st.divider()

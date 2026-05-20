@@ -35,7 +35,7 @@ def connect_sheet():
     sheet = client.open(SHEET_NAME).sheet1
     return sheet
 
-def add_record(location, record_type, boxes):
+def add_record(location, record_type, current_boxes):
     sheet = connect_sheet()
     now = datetime.now()
 
@@ -62,61 +62,57 @@ st.title("🚚 NP Delivery Tracker")
 
 record_type = st.selectbox("Record Type", ["Pick up", "Drop off"])
 
+def change_boxes(amount):
+    current = int(st.session_state.get("boxes", 0))
+    st.session_state.boxes = max(0, current + amount)
+
+
+def reset_boxes():
+    st.session_state.boxes = 0
+
+
 if "boxes" not in st.session_state:
     st.session_state.boxes = 0
 
-st.session_state.boxes = int(st.session_state.boxes)
+try:
+    st.session_state.boxes = int(st.session_state.boxes)
+except:
+    st.session_state.boxes = 0
+
 
 st.subheader("Number of Boxes")
 
 boxes = st.number_input(
     "Boxes",
-    main_value = 0,
-    step = 1,
-    value=int(st.session_state.boxes),
-    key="boxes_input"
+    min_value=0,
+    step=1,
+    key="boxes"
 )
-
-st.session_state.boxes = int(boxes)
 
 col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
 
 with col1:
-    if st.button("-10"):
-        st.session_state.boxes = max(0, int(st.session_state.boxes) - 10)
-        set.rerun()
+    st.button("-10", on_click=change_boxes, args=(-10,))
 
 with col2:
-    if st.button("-5"):
-        st.session_state.boxes = max(0,int(st.session_state.boxes) - 5)
-        set.rerun()
+    st.button("-5", on_click=change_boxes, args=(-5,))
 
 with col3:
-    if st.button("-1"):
-        st.session_state.boxes = max(0, int(st.session_state.boxes) - 1)
-        set.rerun()
+    st.button("-1", on_click=change_boxes, args=(-1,))
 
 with col4:
-    if st.button("Reset"):
-        st.session_state.boxes = 0
-        set.rerun()
+    st.button("Reset", on_click=reset_boxes)
 
 with col5:
-    if st.button("+1"):
-        st.session_state.boxes = int(st.session_state.boxes) + 1
-        set.rerun()
+    st.button("+1", on_click=change_boxes, args=(1,))
 
 with col6:
-    if st.button("+2"):
-        st.session_state.boxes = int(st.session_state.boxes) + 2
-        set.rerun()
+    st.button("+5", on_click=change_boxes, args=(5,))
 
 with col7:
-    if st.button("+5"):
-        st.session_state.boxes = int(st.session_state.boxes) + 5
-        set.rerun()
+    st.button("+10", on_click=change_boxes, args=(10,))
 
-boxes = st.session_state.boxes
+current_boxes = int(st.session_state.boxes)
 
 st.write("Tap a location to record current time:")
 

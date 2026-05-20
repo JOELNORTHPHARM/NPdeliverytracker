@@ -2,3 +2,4 @@ Streamlit
 Pandas
 gspread
 google-auth
+gspread-dataframe

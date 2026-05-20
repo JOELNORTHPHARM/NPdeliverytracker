@@ -94,9 +94,6 @@ if st.button("Record", use_container_width=True, type="primary"):
         f"{record_type} recorded at {selected_location} ({current_boxes} boxes)"
     )
 
-
-
-
 st.divider()
 
 st.subheader("Records")
@@ -113,7 +110,28 @@ if st.button("Load / Refresh Records", use_container_width=True):
 
             st.dataframe(df_display, use_container_width=True)
 
-            csv = df.to_csv(index=False).encode("utf-8-sig")
+            st.subheader("Delete a record")
+
+            row_to_delete = st.selectbox(
+                "Select the Sheet Row to delete",
+                df_display["Sheet Row"].tolist(),
+                format_func=lambda x: f"Row {x} - "
+                                      f"{df_display[df_display['Sheet Row'] == x]['Date'].values[0]} "
+                                      f"{df_display[df_display['Sheet Row'] == x]['Time'].values[0]} "
+                                      f"{df_display[df_display['Sheet Row'] == x]['Location'].values[0]} "
+                                      f"{df_display[df_display['Sheet Row'] == x]['Type'].values[0]}"
+            )
+
+            confirm_delete = st.checkbox("I confirm I want to delete this record")
+
+            if st.button("Delete selected record", use_container_width=True):
+                if confirm_delete:
+                    delete_record(row_to_delete)
+                    st.success("Record deleted.")
+                else:
+                    st.warning("Please tick the confirmation box first.")
+
+            csv = df_display.to_csv(index=False).encode("utf-8-sig")
 
             st.download_button(
                 "Download CSV",
@@ -126,7 +144,8 @@ if st.button("Load / Refresh Records", use_container_width=True):
     except Exception as e:
         st.error("Could not load records.")
         st.exception(e)
+
 else:
-    st.info("Tap 'Load / Refresh Records' only when you need to view or export records.")
+    st.info("Tap 'Load / Refresh Records' only when you need to view, delete, or export records.")
 
 

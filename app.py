@@ -7,6 +7,41 @@ from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="NP Delivery Tracker", page_icon="🚚", layout="centered")
 
+st.caption(f"Logged in as: {st.session_state.username}")
+
+def login():
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+        st.session_state.username = None
+        st.session_state.role = None
+
+    if st.session_state.authenticated:
+        return True
+
+    st.title("🔐 NP Delivery Tracker Login")
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login", use_container_width=True):
+        users = st.secrets["users"]
+
+        if username in users and password == users[username]["password"]:
+            st.session_state.authenticated = True
+            st.session_state.username = username
+            st.session_state.role = users[username].get("role", "user")
+            st.success("Login successful.")
+            st.rerun()
+        else:
+            st.error("Incorrect username or password.")
+
+    return False
+
+
+if not login():
+    st.stop()
+
+
 LOCATIONS = [
     "Stuart Park Pharmacy",
     "DCC",
@@ -125,10 +160,13 @@ if st.session_state.show_records:
                                       f"{df_display[df_display['Sheet Row'] == x]['Location'].values[0]}"
             )
 
-            if st.button("Delete selected record", use_container_width=True):
-                delete_record(row_to_delete)
-                st.success("Record deleted.")
-                st.session_state.show_records = False
+            if st.session_state.role == "admin":
+                if st.button("Delete selected record", use_container_width=True):
+                    delete_record(row_to_delete)
+                    st.success("Record deleted.")
+                    st.session_state.show_records = False
+            else:
+                st.info("Only admin users can delete records.")
 
             csv = df_display.to_csv(index=False).encode("utf-8-sig")
 

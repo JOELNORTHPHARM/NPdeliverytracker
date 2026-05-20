@@ -7,7 +7,7 @@ from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="NP Delivery Tracker", page_icon="🚚", layout="centered")
 
-st.caption(f"Logged in as: {st.session_state.username}")
+
 
 def login():
     if "authenticated" not in st.session_state:
@@ -36,7 +36,11 @@ def login():
             st.error("Incorrect username or password.")
 
     return False
+if login():
+    if "username" in st.session_state:
+        st.caption(f"Logged in as: {st.session_state.username}")
 
+    st.title("NP Delivery Tracker")
 
 if not login():
     st.stop()

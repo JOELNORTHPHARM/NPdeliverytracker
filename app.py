@@ -98,7 +98,15 @@ st.divider()
 
 st.subheader("Records")
 
+st.subheader("Records")
+
+if "show_records" not in st.session_state:
+    st.session_state.show_records = False
+
 if st.button("Load / Refresh Records", use_container_width=True):
+    st.session_state.show_records = True
+
+if st.session_state.show_records:
     try:
         df = load_records()
 

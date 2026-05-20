@@ -62,13 +62,16 @@ st.title("🚚 NP Delivery Tracker")
 
 record_type = st.selectbox("Record Type", ["Pick up", "Drop off"])
 
+if "boxes" not in st.session_state:
+    st.session_state.boxes = 0
+
 st.subheader("Number of Boxes")
 
 boxes = st.number_input(
     "Boxes",
     main_value = 0,
     step = 1,
-    value =st.session_state.boxes,
+    value=st.session_state.boxes,
     key="boxes_input"
 )
 
@@ -111,7 +114,7 @@ with col7:
         st.session_state.boxes += 10
         set.rerun()
 
-boxes = st.ssession_state.boxes
+boxes = st.session_state.boxes
 
 st.write("Tap a location to record current time:")
 

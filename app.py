@@ -93,7 +93,7 @@ if st.button("Record", use_container_width=True, type="primary"):
     st.success(
         f"{record_type} recorded at {selected_location} ({current_boxes} boxes)"
     )
-    st.rerun()
+
 
 
 
@@ -101,48 +101,32 @@ st.divider()
 
 st.subheader("Records")
 
-try:
-    df = load_records()
+if st.button("Load / Refresh Records", use_container_width=True):
+    try:
+        df = load_records()
 
-    if df.empty:
-        st.info("No records yet.")
-    else:
-        df_display = df.copy()
-        df_display.insert(0, "Sheet Row", range(2, len(df_display) + 2))
+        if df.empty:
+            st.info("No records yet.")
+        else:
+            df_display = df.copy()
+            df_display.insert(0, "Sheet Row", range(2, len(df_display) + 2))
 
-        st.dataframe(df_display, use_container_width=True)
+            st.dataframe(df_display, use_container_width=True)
 
-        st.subheader("Delete a record")
+            csv = df.to_csv(index=False).encode("utf-8-sig")
 
-        row_to_delete = st.selectbox(
-            "Select the Sheet Row to delete",
-            df_display["Sheet Row"].tolist(),
-            format_func=lambda x: f"Row {x} - {df_display[df_display['Sheet Row'] == x]['Date'].values[0]} "
-                                  f"{df_display[df_display['Sheet Row'] == x]['Time'].values[0]} "
-                                  f"{df_display[df_display['Sheet Row'] == x]['Location'].values[0]} "
-                                  f"{df_display[df_display['Sheet Row'] == x]['Type'].values[0]}"
-        )
+            st.download_button(
+                "Download CSV",
+                csv,
+                "np_delivery_tracker.csv",
+                "text/csv",
+                use_container_width=True
+            )
 
-        confirm_delete = st.checkbox("I confirm I want to delete this record")
+    except Exception as e:
+        st.error("Could not load records.")
+        st.exception(e)
+else:
+    st.info("Tap 'Load / Refresh Records' only when you need to view or export records.")
 
-        if st.button("Delete selected record", use_container_width=True):
-            if confirm_delete:
-                delete_record(row_to_delete)
-                st.success("Record deleted.")
-                st.rerun()
-            else:
-                st.warning("Please tick the confirmation box first.")
 
-        csv = df.to_csv(index=False).encode("utf-8-sig")
-
-        st.download_button(
-            "Download CSV",
-            csv,
-            "np_delivery_tracker.csv",
-            "text/csv",
-            use_container_width=True
-        )
-
-except Exception as e:
-    st.warning("No records yet, or Google Sheet is not connected.")
-    st.error(e)

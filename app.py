@@ -8,12 +8,12 @@ from streamlit_cookies_controller import CookieController
 
 
 st.set_page_config(
-    page_title="NP Operations System",
-    page_icon="🚚",
+    page_title="NorthPharm Operations System",
+    page_icon="🐢",
     layout="centered"
 )
 
-SHEET_NAME = "NP Delivery Tracker"
+SHEET_NAME = "NorthPharm Delivery Tracker"
 
 LOCATIONS = [
     "Stuart Park Pharmacy",
@@ -46,7 +46,7 @@ def login():
     if st.session_state.authenticated:
         return True
 
-    st.title("🔐 NP Operations Login")
+    st.title("🔐 NorthPharm Operations Login")
 
     username = st.text_input("Username", key="login_username")
     password = st.text_input("Password", type="password", key="login_password")
@@ -276,7 +276,7 @@ module = st.sidebar.radio(
 
 
 if module == "Delivery Tracker":
-    st.title("🚚 NP Delivery Tracker")
+    st.title("🚚 NorthPharm Delivery Tracker")
 
     record_type = st.selectbox(
         "Record Type",
@@ -356,7 +356,7 @@ if module == "Delivery Tracker":
 
 
 elif module == "Inventory Management":
-    st.title("📦 NP Inventory Management")
+    st.title("📦 NorthPharm Stock Level Management")
 
     inventory_menu = st.selectbox(
         "Inventory Function",

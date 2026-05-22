@@ -52,8 +52,6 @@ def login():
 
     return False
 
-st.caption(f"Logged in as:{st.session_state.username}")
-
 if st.button("Logout"):
     cookies.remove("npdt_user")
     cookies.remove("npdt_role")
@@ -65,7 +63,8 @@ if st.button("Logout"):
 if not login():
     st.stop()
 
-st.caption(f"Logged in as: {st.session_state.username}")
+username = st.session_state.get("username", "Unknown")
+st.caption(f"Logged in as {username}")
 
 st.title("🚚NP Delivery Tracker")
 
@@ -120,7 +119,6 @@ def delete_record(row_number):
     sheet = connect_sheet()
     sheet.delete_rows(row_number)
 
-st.title("🚚 NP Delivery Tracker")
 
 record_type = st.selectbox("Record Type", ["Pick up", "Drop off"])
 

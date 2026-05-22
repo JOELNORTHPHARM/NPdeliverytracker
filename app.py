@@ -2,26 +2,37 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import gspread
 from google.oauth2.service_account import Credentials
+from streamlit_cookies_controller import CookieController
 
 st.set_page_config(page_title="NP Delivery Tracker", page_icon="🚚", layout="centered")
 
 
-
+cookies = CookieController()
 def login():
     if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
-        st.session_state.username = None
-        st.session_state.role = None
+        saved_user = cookies.get("npdt_user")
+        saved_role = cookies.get("npdt_role")
+
+        if saved_user and saved_role:
+            st.session_state.authenticated = True
+            st.session_state.username = saved_user
+            st.session_state.role = saved_role
+        else:
+            st.session_state.authenticated = False
+            st.session_state.username = None
+            st.session_state.role = None
 
     if st.session_state.authenticated:
         return True
 
     st.title("🔐 NP Delivery Tracker Login")
 
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    username = st.text_input("Username", key="login_username")
+    password = st.text_input("Password", type="password", key="login_password")
+    remember_me = st.checkbox("Remember me on this device", value=True)
 
     if st.button("Login", use_container_width=True):
         users = st.secrets["users"]
@@ -30,12 +41,26 @@ def login():
             st.session_state.authenticated = True
             st.session_state.username = username
             st.session_state.role = users[username].get("role", "user")
-            st.success("Login successful.")
+
+            if remember_me:
+                cookies.set("npdt_user", username)
+                cookies.set("npdt_role", st.session_state.role)
+
             st.rerun()
         else:
             st.error("Incorrect username or password.")
 
     return False
+
+st.caption(f"Logged in as:{st.session_state.username}")
+
+if st.button("Logout"):
+    cookies.remove("npdt_user")
+    cookies.remove("npdt_role")
+    st.session_state.authenticated = False
+    st.session_state.username = None
+    st.session_state.role = None
+    st.rerun()
 
 if not login():
     st.stop()
@@ -74,7 +99,7 @@ def connect_sheet():
 
 def add_record(location, record_type, current_boxes):
     sheet = connect_sheet()
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Australia/Darwin"))
 
     row = [
         now.strftime("%d/%m/%Y"),

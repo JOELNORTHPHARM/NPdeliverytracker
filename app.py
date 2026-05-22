@@ -46,7 +46,7 @@ def login():
     if st.session_state.authenticated:
         return True
 
-    st.title("🔐 NorthPharm Operations Login")
+    st.title("🔐 NorthPharm Operations System Login")
 
     username = st.text_input("Username", key="login_username")
     password = st.text_input("Password", type="password", key="login_password")

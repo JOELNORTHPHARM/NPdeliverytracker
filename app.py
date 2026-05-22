@@ -4,13 +4,26 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import gspread
 from google.oauth2.service_account import Credentials
-from streamlit_cookies_controller import CookieController
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
+
 
 
 st.set_page_config(
     page_title="NorthPharm Operations System",
     page_icon="🐢",
     layout="centered"
+)
+
+with open("config.yaml") as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = stauth.Authenticate(
+    config["credentials"],
+    config["cookie"]["name"],
+    config["cookie"]["key"],
+    config["cookie"]["expiry_days"],
 )
 
 SHEET_NAME = "NorthPharm Delivery Tracker"
@@ -25,51 +38,6 @@ LOCATIONS = [
     "Karama Pharmacy",
     "Northpharm RDH"
 ]
-
-cookies = CookieController()
-
-
-def login():
-    if "authenticated" not in st.session_state:
-        saved_user = cookies.get("npdt_user")
-        saved_role = cookies.get("npdt_role")
-
-        if saved_user and saved_role:
-            st.session_state.authenticated = True
-            st.session_state.username = saved_user
-            st.session_state.role = saved_role
-        else:
-            st.session_state.authenticated = False
-            st.session_state.username = None
-            st.session_state.role = None
-
-    if st.session_state.authenticated:
-        return True
-
-    st.title("🔐 NorthPharm Operations System Login")
-
-    username = st.text_input("Username", key="login_username")
-    password = st.text_input("Password", type="password", key="login_password")
-    remember_me = st.checkbox("Remember me on this device", value=True)
-
-    if st.button("Login", use_container_width=True):
-        users = st.secrets["users"]
-
-        if username in users and password == users[username]["password"]:
-            st.session_state.authenticated = True
-            st.session_state.username = username
-            st.session_state.role = users[username].get("role", "user")
-
-            if remember_me:
-                cookies.set("npdt_user", username)
-                cookies.set("npdt_role", st.session_state.role)
-
-            st.rerun()
-        else:
-            st.error("Incorrect username or password.")
-
-    return False
-
 
 def get_client():
     scopes = [
@@ -250,23 +218,28 @@ def get_stock_status(row):
         return "Low Stock"
     return "OK"
 
+authenticator.login()
 
-if not login():
+auth_status = st.session_state.get("authentication_status")
+
+if auth_status:
+    username = st.session_state["username", "Unknown"]
+    role = config["credentials"]["username"][username]["role", "user"]
+
+    st.caption(f"Logged in as:{username} ({role})")
+
+    authenticator.logout("logout", "main")
+
+elif auth_status is False:
+    st.error("Username/password is incorrect.")
+    st.stop()
+
+elif auth_status is None:
+    st.warning("Please enter your username and password")
     st.stop()
 
 
-username = st.session_state.get("username", "Unknown")
-role = st.session_state.get("role", "user")
-
 st.caption(f"Logged in as: {username} ({role})")
-
-if st.button("Logout", use_container_width=True):
-    cookies.remove("npdt_user")
-    cookies.remove("npdt_role")
-    st.session_state.authenticated = False
-    st.session_state.username = None
-    st.session_state.role = None
-    st.rerun()
 
 
 module = st.sidebar.radio(

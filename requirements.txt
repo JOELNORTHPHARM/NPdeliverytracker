@@ -3,4 +3,6 @@ Pandas
 gspread
 google-auth
 gspread-dataframe
-streamlit-cookies-controller
+streamlit-authenticator
+bcrypt
+PyYAML

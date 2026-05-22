@@ -1,0 +1,33 @@
+credentials:
+  usernames:
+    Joel:
+      email: joel@northpharm.local
+      name: Joel
+      password: "191312"
+      role: admin
+
+    Desmond:
+      email: desmond@northpharm.local
+      name: Desmond
+      password: "128888"
+      role: admin
+
+    NPDT:
+      email: npdt@northpharm.local
+      name: driver
+      password: "123456"
+      role: user
+
+    StuartPark:
+      email: Spp@northpharm.local
+      name: Spp
+      password: "123456"
+      role: user
+
+cookie:
+  expiry_days: 30
+  key: np_operations_key
+  name: np_operations_cookie
+
+preauthorized:
+  emails: []

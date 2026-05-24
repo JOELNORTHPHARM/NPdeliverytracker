@@ -3,19 +3,19 @@ credentials:
     Joel:
       email: joel@northpharm.local
       name: Joel
-      password: "191312"
+      password: "$2b$12$goBqSoWQqDQ524cD8Pi0KuknFQ0WPl3vfxZBbPGsoimNK4xdunqBy"
       role: admin
 
     Desmond:
       email: desmond@northpharm.local
       name: Desmond
-      password: "128888"
+      password: "$2b$12$ACh7A1IfPeEFP5IfHpv.oO.wVhWfPHTOJGuszYEba6WSd0IXGFn1O"
       role: admin
 
     NPDT:
       email: npdt@northpharm.local
       name: driver
-      password: "123456"
+      password: "$2b$12$5m6gy9UppBUDR7D7qGyAOOms5YgxHyZnf/mO3Vg8Dig9o/pT05rte"
       role: user
 
     StuartPark:

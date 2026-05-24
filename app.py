@@ -223,10 +223,8 @@ authenticator.login()
 auth_status = st.session_state.get("authentication_status")
 
 if auth_status:
-    username = st.session_state["username", "Unknown"]
-    role = config["credentials"]["username"][username]["role", "user"]
-
-    st.caption(f"Logged in as:{username} ({role})")
+    username = st.session_state.get("username", "Unknown")
+    role = config["credentials"]["usernames"].get(username, {}).get("role", "user")
 
     authenticator.logout("logout", "main")
 

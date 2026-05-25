@@ -8,3 +8,4 @@ __pycache__/
 secrets.toml
 Streamlit/secrets.toml
 fix_secrets.py
+.streamlit/secrets.toml

@@ -375,7 +375,7 @@ elif module == "Inventory Management":
                     return "background-color: #fff3cc"
                 return ""
 
-            styled = report.style.applymap(highlight_status, subset=["Status"])
+            styled = report.style.map(highlight_status, subset=["Status"])
             st.dataframe(styled, use_container_width=True)
 
             csv = report.to_csv(index=False).encode("utf-8-sig")

@@ -106,8 +106,25 @@ def load_inventory_items():
 @st.cache_data(ttl=60)
 def load_inventory_movements():
     sheet = get_worksheet("Inventory_Movements")
-    data = sheet.get_all_records()
-    return pd.DataFrame(data)
+    rows = sheet.get_all_values()
+    if not rows:
+        return pd.DataFrame()
+    headers = rows[0]
+    # Deduplicate empty headers
+    seen = {}
+    clean_headers = []
+    for h in headers:
+        if h == '':
+            h = f'_empty_{len(seen)}'
+        seen[h] = seen.get(h, 0) + 1
+        if seen[h] > 1:
+            h = f'{h}_{seen[h]}'
+        clean_headers.append(h)
+    data = [dict(zip(clean_headers, row)) for row in rows[1:]]
+    df = pd.DataFrame(data)
+    # Remove columns that are entirely empty
+    df = df[[c for c in df.columns if not c.startswith('_empty_')]]
+    return df
 
 
 def update_inventory_item_qty(item_id, new_qty):

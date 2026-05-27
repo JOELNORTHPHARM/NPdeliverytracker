@@ -12,13 +12,13 @@ credentials:
       password: "$2b$12$ACh7A1IfPeEFP5IfHpv.oO.wVhWfPHTOJGuszYEba6WSd0IXGFn1O"
       role: admin
 
-    NPDT:
+    driver:
       email: npdt@northpharm.local
       name: driver
       password: "$2b$12$AD7uytb/Fo/I7snbrIDvFOCqdjXj8aZmpUTxv205zWgTju4nPj0Ju"
       role: user
 
-    StuartPark:
+    Spp:
       email: Spp@northpharm.local
       name: Spp
       password: "$2b$12$AD7uytb/Fo/I7snbrIDvFOCqdjXj8aZmpUTxv205zWgTju4nPj0Ju"

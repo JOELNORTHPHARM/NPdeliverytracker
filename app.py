@@ -9,13 +9,14 @@ import yaml
 from yaml.loader import SafeLoader
 
 
-
+# ── 页面配置 ──────────────────────────────────────────────
 st.set_page_config(
     page_title="NorthPharm Operations System",
     page_icon="🐢",
     layout="centered"
 )
 
+# ── 加载认证配置 ──────────────────────────────────────────
 with open("config.yaml") as file:
     config = yaml.load(file, Loader=SafeLoader)
 
@@ -26,6 +27,7 @@ authenticator = stauth.Authenticate(
     config["cookie"]["expiry_days"],
 )
 
+# ── 常量 ──────────────────────────────────────────────────
 SHEET_NAME = "NorthPharm Delivery Tracker"
 
 LOCATIONS = [
@@ -39,35 +41,36 @@ LOCATIONS = [
     "Northpharm RDH"
 ]
 
-def get_client():
+
+# ── Google Sheets 连接（缓存客户端，避免重复认证）────────────
+@st.cache_resource
+def get_cached_client():
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-
     credentials = Credentials.from_service_account_info(
         dict(st.secrets["gcp_service_account"]),
         scopes=scopes
     )
-
     return gspread.authorize(credentials)
 
 
 def get_worksheet(sheet_name):
-    client = get_client()
+    client = get_cached_client()
     spreadsheet = client.open(SHEET_NAME)
     return spreadsheet.worksheet(sheet_name)
 
 
 def connect_delivery_sheet():
-    client = get_client()
+    client = get_cached_client()
     return client.open(SHEET_NAME).sheet1
 
 
+# ── Delivery Tracker 数据操作 ─────────────────────────────
 def add_delivery_record(location, record_type, boxes):
     sheet = connect_delivery_sheet()
     now = datetime.now(ZoneInfo("Australia/Darwin"))
-
     row = [
         now.strftime("%d/%m/%Y"),
         now.strftime("%H:%M:%S"),
@@ -75,10 +78,11 @@ def add_delivery_record(location, record_type, boxes):
         record_type,
         int(boxes)
     ]
-
     sheet.append_row(row)
+    st.cache_data.clear()  # 写入后清除缓存，下次读取最新数据
 
 
+@st.cache_data(ttl=60)
 def load_delivery_records():
     sheet = connect_delivery_sheet()
     data = sheet.get_all_records()
@@ -88,14 +92,18 @@ def load_delivery_records():
 def delete_delivery_record(row_number):
     sheet = connect_delivery_sheet()
     sheet.delete_rows(int(row_number))
+    st.cache_data.clear()
 
 
+# ── Inventory 数据操作 ────────────────────────────────────
+@st.cache_data(ttl=60)
 def load_inventory_items():
     sheet = get_worksheet("Inventory_Items")
     data = sheet.get_all_records()
     return pd.DataFrame(data)
 
 
+@st.cache_data(ttl=60)
 def load_inventory_movements():
     sheet = get_worksheet("Inventory_Movements")
     data = sheet.get_all_records()
@@ -105,19 +113,16 @@ def load_inventory_movements():
 def update_inventory_item_qty(item_id, new_qty):
     sheet = get_worksheet("Inventory_Items")
     records = sheet.get_all_records()
-
     for index, row in enumerate(records, start=2):
         if row["Item ID"] == item_id:
             sheet.update_cell(index, 6, int(new_qty))
             return True
-
     return False
 
 
 def add_inventory_movement(user, item, action, qty_change, balance_after, note):
     sheet = get_worksheet("Inventory_Movements")
     now = datetime.now(ZoneInfo("Australia/Darwin"))
-
     row = [
         now.strftime("%d/%m/%Y"),
         now.strftime("%H:%M:%S"),
@@ -130,8 +135,8 @@ def add_inventory_movement(user, item, action, qty_change, balance_after, note):
         int(balance_after),
         note
     ]
-
     sheet.append_row(row)
+    st.cache_data.clear()
 
 
 def process_inventory_action(user, item_id, action, qty, note=""):
@@ -142,7 +147,6 @@ def process_inventory_action(user, item_id, action, qty, note=""):
         return
 
     item_row = items[items["Item ID"] == item_id]
-
     if item_row.empty:
         st.error("Selected item was not found.")
         return
@@ -154,21 +158,17 @@ def process_inventory_action(user, item_id, action, qty, note=""):
     if action == "Take Stock":
         new_qty = max(0, current_qty - qty)
         qty_change = new_qty - current_qty
-
     elif action == "Add Stock":
         new_qty = current_qty + qty
         qty_change = qty
-
     elif action == "Stocktake Adjustment":
         new_qty = qty
         qty_change = new_qty - current_qty
-
     else:
         st.error("Invalid inventory action.")
         return
 
     updated = update_inventory_item_qty(item_id, new_qty)
-
     if not updated:
         st.error("Could not update inventory quantity.")
         return
@@ -203,49 +203,53 @@ def add_new_inventory_item(category, item_name, size, unit, initial_qty, low_sto
         int(low_stock_level),
         True
     ]
-
     sheet.append_row(row)
+    st.cache_data.clear()
     st.success("New item added.")
 
 
 def get_stock_status(row):
     current_qty = int(row["Current Qty"])
     low_level = int(row["Low Stock Level"])
-
     if current_qty <= 0:
         return "Out of Stock"
     if current_qty <= low_level:
         return "Low Stock"
     return "OK"
 
-authenticator.login()
+
+# ── 登录 ──────────────────────────────────────────────────
+try:
+    authenticator.login()
+except Exception as e:
+    st.error(f"Login error: {e}")
+    st.stop()
 
 auth_status = st.session_state.get("authentication_status")
 
-if auth_status:
+if auth_status is True:
     username = st.session_state.get("username", "Unknown")
     role = config["credentials"]["usernames"].get(username, {}).get("role", "user")
-
-    authenticator.logout("logout", "main")
-
 elif auth_status is False:
     st.error("Username/password is incorrect.")
     st.stop()
-
-elif auth_status is None:
-    st.warning("Please enter your username and password")
+else:
     st.stop()
 
 
-st.caption(f"Logged in as: {username} ({role})")
+# ── 侧边栏：用户信息 + 登出 + 模块选择 ───────────────────────
+with st.sidebar:
+    st.markdown(f"👤 **{username}**")
+    st.caption(f"Role: {role}")
+    authenticator.logout(button_name="Logout", location="sidebar")
+    st.divider()
+    module = st.radio(
+        "Module",
+        ["Delivery Tracker", "Inventory Management"]
+    )
 
 
-module = st.sidebar.radio(
-    "Module",
-    ["Delivery Tracker", "Inventory Management"]
-)
-
-
+# ── Delivery Tracker 模块 ─────────────────────────────────
 if module == "Delivery Tracker":
     st.title("🚚 NorthPharm Delivery Tracker")
 
@@ -273,13 +277,13 @@ if module == "Delivery Tracker":
         )
 
     st.divider()
-
     st.subheader("Records")
 
     if "show_delivery_records" not in st.session_state:
         st.session_state.show_delivery_records = False
 
     if st.button("Load / Refresh Records", use_container_width=True):
+        st.cache_data.clear()
         st.session_state.show_delivery_records = True
 
     if st.session_state.show_delivery_records:
@@ -295,12 +299,14 @@ if module == "Delivery Tracker":
                 st.dataframe(df_display, use_container_width=True)
 
                 row_to_delete = st.selectbox(
-                    "Delete record",
+                    "Select record to delete",
                     df_display["Sheet Row"].tolist(),
-                    format_func=lambda x: f"Row {x} - "
-                                          f"{df_display[df_display['Sheet Row'] == x]['Date'].values[0]} "
-                                          f"{df_display[df_display['Sheet Row'] == x]['Time'].values[0]} "
-                                          f"{df_display[df_display['Sheet Row'] == x]['Location'].values[0]}"
+                    format_func=lambda x: (
+                        f"Row {x} - "
+                        f"{df_display[df_display['Sheet Row'] == x]['Date'].values[0]} "
+                        f"{df_display[df_display['Sheet Row'] == x]['Time'].values[0]} "
+                        f"{df_display[df_display['Sheet Row'] == x]['Location'].values[0]}"
+                    )
                 )
 
                 if role == "admin":
@@ -308,11 +314,11 @@ if module == "Delivery Tracker":
                         delete_delivery_record(row_to_delete)
                         st.success("Record deleted.")
                         st.session_state.show_delivery_records = False
+                        st.rerun()
                 else:
                     st.info("Only admin users can delete records.")
 
                 csv = df_display.to_csv(index=False).encode("utf-8-sig")
-
                 st.download_button(
                     "Download CSV",
                     csv,
@@ -323,9 +329,11 @@ if module == "Delivery Tracker":
 
         except Exception as e:
             st.error("Could not load delivery records.")
-            st.exception(e)
+            if role == "admin":
+                st.exception(e)
 
 
+# ── Inventory Management 模块 ─────────────────────────────
 elif module == "Inventory Management":
     st.title("📦 NorthPharm Stock Level Management")
 
@@ -352,16 +360,25 @@ elif module == "Inventory Management":
             items_df["Active"].astype(str).str.upper().isin(["TRUE", "YES", "1"])
         ].copy()
 
+        # 当前库存
         if inventory_menu == "Current Stock":
             st.subheader("Current Stock")
 
             report = active_items.copy()
             report["Status"] = report.apply(get_stock_status, axis=1)
 
-            st.dataframe(report, use_container_width=True)
+            # 状态颜色高亮
+            def highlight_status(val):
+                if val == "Out of Stock":
+                    return "background-color: #ffcccc"
+                elif val == "Low Stock":
+                    return "background-color: #fff3cc"
+                return ""
+
+            styled = report.style.applymap(highlight_status, subset=["Status"])
+            st.dataframe(styled, use_container_width=True)
 
             csv = report.to_csv(index=False).encode("utf-8-sig")
-
             st.download_button(
                 "Download Stock Report",
                 csv,
@@ -370,6 +387,7 @@ elif module == "Inventory Management":
                 use_container_width=True
             )
 
+        # 库存操作
         elif inventory_menu in ["Take Stock", "Add Stock", "Stocktake Adjustment"]:
             st.subheader(inventory_menu)
 
@@ -389,13 +407,7 @@ elif module == "Inventory Management":
                 else "Quantity"
             )
 
-            qty = st.number_input(
-                qty_label,
-                min_value=0,
-                step=1,
-                value=0
-            )
-
+            qty = st.number_input(qty_label, min_value=0, step=1, value=0)
             note = st.text_input("Note", value="")
 
             if st.button(inventory_menu, use_container_width=True, type="primary"):
@@ -408,6 +420,7 @@ elif module == "Inventory Management":
                 )
                 st.success("Inventory updated successfully.")
 
+        # 添加新商品
         elif inventory_menu == "Add New Item":
             st.subheader("Add New Item")
 
@@ -419,16 +432,10 @@ elif module == "Inventory Management":
                 size = st.text_input("Size")
                 unit = st.text_input("Unit", value="pcs")
                 initial_qty = st.number_input(
-                    "Initial Quantity",
-                    min_value=0,
-                    step=1,
-                    value=0
+                    "Initial Quantity", min_value=0, step=1, value=0
                 )
                 low_stock_level = st.number_input(
-                    "Low Stock Level",
-                    min_value=0,
-                    step=1,
-                    value=5
+                    "Low Stock Level", min_value=0, step=1, value=5
                 )
 
                 if st.button("Add Item", use_container_width=True, type="primary"):
@@ -444,8 +451,12 @@ elif module == "Inventory Management":
                     else:
                         st.warning("Please fill Category, Item Name, and Size.")
 
+        # 操作历史
         elif inventory_menu == "Movement History":
             st.subheader("Movement History")
+
+            if st.button("Refresh", use_container_width=True):
+                st.cache_data.clear()
 
             movements = load_inventory_movements()
 
@@ -455,7 +466,6 @@ elif module == "Inventory Management":
                 st.dataframe(movements, use_container_width=True)
 
                 csv = movements.to_csv(index=False).encode("utf-8-sig")
-
                 st.download_button(
                     "Download Movement History",
                     csv,
@@ -466,4 +476,5 @@ elif module == "Inventory Management":
 
     except Exception as e:
         st.error("Could not load inventory module.")
-        st.exception(e)
+        if role == "admin":
+            st.exception(e)

@@ -25,9 +25,7 @@ authenticator = stauth.Authenticate(
     config["cookie"]["name"],
     config["cookie"]["key"],
     config["cookie"]["expiry_days"],
-    auto_hash=False,
 )
-
 # ── 常量 ──────────────────────────────────────────────────
 SHEET_NAME = "NorthPharm Delivery Tracker"
 

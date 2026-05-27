@@ -3,6 +3,6 @@ Pandas
 gspread
 google-auth
 gspread-dataframe
-streamlit-authenticator
+streamlit-authenticator==0.3.3
 bcrypt
 PyYAML

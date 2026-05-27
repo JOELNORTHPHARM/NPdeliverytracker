@@ -26,7 +26,7 @@ credentials:
 
 cookie:
   expiry_days: 30
-  key: np_operations_key
+  key: e153daa64f4f9c0834ac6ac20db2b55c564be7b1c4fc3d5627553b937e221110
   name: np_operations_cookie
 
 preauthorized:

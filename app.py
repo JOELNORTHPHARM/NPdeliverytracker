@@ -20,9 +20,7 @@ st.set_page_config(
 with open("config.yaml") as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-print("DEBUG config usernames:", list(config['credentials']['usernames'].keys()))
-for uname, udata in config['credentials']['usernames'].items():
-        print(f"  {uname}: password={udata['password'][:20]}...")
+st.write("DEBUG passwords:", {u: d['password'] for u, d in config['credentials']['usernames'].items()})
 authenticator = stauth.Authenticate(
     config["credentials"],
     config["cookie"]["name"],

@@ -27,6 +27,7 @@ authenticator = stauth.Authenticate(
     config["cookie"]["key"],
     config["cookie"]["expiry_days"],
 )
+st.write("DEBUG after Authenticate():", {u: d['password'][:30] for u, d in config['credentials']['usernames'].items()})
 # ── 常量 ──────────────────────────────────────────────────
 SHEET_NAME = "NorthPharm Delivery Tracker"
 

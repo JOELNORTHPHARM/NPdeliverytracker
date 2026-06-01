@@ -104,7 +104,7 @@ def load_inventory_movements():
         rows = sheet.get_all_values()
         if not rows:
                     return pd.DataFrame()
-    headers = rows[0]
+        headers = rows[0]
     # Deduplicate empty headers
     seen = {}
     clean_headers = []

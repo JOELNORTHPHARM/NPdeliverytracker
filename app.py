@@ -266,7 +266,7 @@ with st.sidebar:
     st.divider()
     module = st.radio(
         "Module",
-        ["Delivery Tracker", "Inventory Management"]
+        ["Delivery Tracker", "Inventory Management","Consumable Order"]
     )
 
 
@@ -499,3 +499,30 @@ elif module == "Inventory Management":
         st.error("Could not load inventory module.")
         if role == "admin":
             st.exception(e)
+
+# ── Consumable Order Module ──────────────────
+
+elif module == "Consumable Order":
+
+    st.title("🛒 Consumable Order")
+
+    st.markdown("---")
+
+    st.subheader("Consumable Order")
+
+    st.write(
+        "Click below to access the Consumable Order form."
+    )
+
+    ONEDRIVE_URL = "https://territorypharmacyservices-my.sharepoint.com/:x:/g/personal/complianceprogram_mytp_com_au/IQArbIGSUk1HQbL58KLlPuRJAegleqG-6tz6o1OhvIMTZUg?e=dAG2qb"
+
+    st.link_button(
+        "📂 Open Consumable Order",
+        ONEDRIVE_URL,
+        use_container_width=True
+    )
+
+    st.caption(
+        "You can access this link using your PC, "
+        "tablet or mobile phone."
+    )
